@@ -1,1 +1,1 @@
-# thesis
+# Repository for anything related to my bachelor's thesis
