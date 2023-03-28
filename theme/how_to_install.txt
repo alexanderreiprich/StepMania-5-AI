@@ -1,0 +1,2 @@
+1.) Navigate to %appdata%/StepMania 5/Themes
+2.) Drop the default_no_overlay file in the Themes folder

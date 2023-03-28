@@ -9,8 +9,15 @@ stepWindow = pygetwindow.getWindowsWithTitle('StepMania')
 hwnd = stepWindow[0]._hWnd
 bbox = win32gui.GetWindowRect(hwnd)
 useInput = SendInput()
+recognizePattern = RecognizePattern([])
 
-while True:
+i = 0
+
+while i < 100:
   image = Screenshot.screenshot(hwnd, bbox)
-  arrowArray = RecognizePattern.analyzeImage(image)
-  useInput.interpretLocations(locations=arrowArray)
+  arrowArray = recognizePattern.analyzeImage(image)
+  # useInput.interpretLocations(locations=arrowArray)
+  i += 1
+  print(i)
+
+recognizePattern.exportVideo()
