@@ -17,6 +17,7 @@ class RecognizePattern:
     arrowArray = []
     for template in self.template_array:
       w, h = template.shape[::-1]
+      # TODO: add mask
       res = cv.matchTemplate(img_gray,template, cv.TM_CCOEFF_NORMED)
       loc = np.where(res >= threshold)
       for pt in zip(*loc[::-1]):
@@ -33,7 +34,7 @@ class RecognizePattern:
   def exportVideo(self):
     frame_width = 290
     frame_height = 495
-    out = cv.VideoWriter('export\result.avi', cv.VideoWriter_fourcc(*'DIVX'), 30, (frame_width, frame_height))
+    out = cv.VideoWriter(r'export\result_delay.avi', cv.VideoWriter_fourcc(*'DIVX'), 5, (frame_width, frame_height))
     for k in range(len(self.videoArray)):
       out.write(self.videoArray[k])
     out.release()

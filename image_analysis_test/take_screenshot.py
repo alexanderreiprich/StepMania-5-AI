@@ -3,35 +3,61 @@ import mss.tools
 import win32gui
 import pygetwindow
 import time
-import numpy
+import numpy as np
+import cv2
 
-stepWindow = pygetwindow.getWindowsWithTitle('StepMania')
-hwnd = stepWindow[0]._hWnd
-bbox = win32gui.GetWindowRect(hwnd)
+
 
 class Screenshot:
-  def screenshotGameplay(hwnd, bbox):
+  def screenshot(self, hwnd, bbox, crop):
+    # win32gui.SetForegroundWindow(hwnd)
+    img = ImageGrab.grab(bbox)
+    size = img.size
+    img = img.crop(crop)
+
+    # convert ImageGrab image to OpenCV image
+    opencvImg = img.convert('RGB')
+    opencvImg = np.array(opencvImg)
+    opencvImg = opencvImg[:, :, ::-1].copy()
+    #opencvImg = opencvImg[:, :, :3].copy()
+    return opencvImg
+
+  def downscaleImage(self, img, size, shape):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    resized = cv2.resize(gray, size)
+    channel = np.reshape(resized, shape)
+    return channel
+
+  def screenshotGameplay():
     win32gui.SetForegroundWindow(hwnd)
     img = ImageGrab.grab(bbox)
-    size = img.size 
+    size = img.size
     img = img.crop((110, 35, 400, 530))
 
     # convert ImageGrab image to OpenCV image
     opencvImg = img.convert('RGB')
-    opencvImg = numpy.array(opencvImg)
+    opencvImg = np.array(opencvImg)
     opencvImg = opencvImg[:, :, ::-1].copy()
     return opencvImg
 
   def screenshotCombo(hwnd, bbox):
     win32gui.SetForegroundWindow(hwnd)
     img = ImageGrab.grab(bbox)
-    size = img.size 
+    size = img.size
     img = img.crop((550, 300, 650, 430))
 
-    img.save(r'assets\combo.png')
+    # img.save(r'assets\combo.png')
 
     # convert ImageGrab image to OpenCV image
     opencvImg = img.convert('RGB')
-    opencvImg = numpy.array(opencvImg)
+    opencvImg = np.array(opencvImg)
     opencvImg = opencvImg[:, :, ::-1].copy()
     return opencvImg
+
+
+ss = Screenshot()
+stepWindow = pygetwindow.getWindowsWithTitle('StepMania')
+hwnd = stepWindow[0]._hWnd
+bbox = win32gui.GetWindowRect(hwnd)
+img = ss.screenshot(hwnd, bbox, (110, 35, 400, 530))
+channel = ss.downscaleImage(img, (100, 170), (1, 170, 100))
