@@ -13,4 +13,7 @@ class RecognizeText:
 
   def get_number_from_image(self, img):
     reformatted_string = pytesseract.image_to_string(img, config='-c tessedit_char_whitelist=0123456789')
+    if reformatted_string == '':
+      reformatted_string = 0
+    
     return int(reformatted_string)
