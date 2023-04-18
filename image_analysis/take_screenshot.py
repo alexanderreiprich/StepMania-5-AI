@@ -6,8 +6,6 @@ import time
 import numpy as np
 import cv2
 
-
-
 class Screenshot:
   def screenshot(self, hwnd, bbox, crop):
     # win32gui.SetForegroundWindow(hwnd)
@@ -53,11 +51,3 @@ class Screenshot:
     opencvImg = np.array(opencvImg)
     opencvImg = opencvImg[:, :, ::-1].copy()
     return opencvImg
-
-
-ss = Screenshot()
-stepWindow = pygetwindow.getWindowsWithTitle('StepMania')
-hwnd = stepWindow[0]._hWnd
-bbox = win32gui.GetWindowRect(hwnd)
-img = ss.screenshot(hwnd, bbox, (110, 35, 400, 530))
-channel = ss.downscaleImage(img, (100, 170), (1, 170, 100))
