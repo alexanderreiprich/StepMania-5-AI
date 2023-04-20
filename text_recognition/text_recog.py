@@ -5,7 +5,7 @@ class RecognizeText:
   def is_text_in_image(self, img, text, chars):
     done = False
     
-    res = pytesseract.image_to_string(img)[:chars]
+    res = pytesseract.image_to_string(img, lang='eng', config='--psm 7')[:chars]
     if res in text:
       done = True
 
