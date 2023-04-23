@@ -20,6 +20,11 @@ class Screenshot:
     #opencvImg = opencvImg[:, :, :3].copy()
     return opencvImg
 
+  def reshapeImage(self, img, shape):
+    resized = np.resize(img, (shape[2], shape[1]))
+    reshaped = np.reshape(resized, shape)
+    return reshaped
+
   def downscaleImage(self, img, size, shape):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     resized = cv2.resize(gray, size)
