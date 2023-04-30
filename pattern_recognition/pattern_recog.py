@@ -63,34 +63,3 @@ class RecognizePattern:
     if result == "":
       result = "0"
     return(int(result))
-      
-
-  #### Methods that aren't used anymore ####  
-
-  def exportVideo(self):
-    frame_width = 290
-    frame_height = 495
-    out = cv.VideoWriter(r'export\result_delay.avi', cv.VideoWriter_fourcc(*'DIVX'), 5, (frame_width, frame_height))
-    for k in range(len(self.videoArray)):
-      out.write(self.videoArray[k])
-    out.release()
-
-  def analyzeImage(self, img):
-    img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    threshold = 0.85
-    arrowArray = []
-    for template in self.template_array:
-      w, h = template.shape[::-1]
-      # TODO: add mask
-      res = cv.matchTemplate(img_gray,template, cv.TM_CCOEFF_NORMED)
-      loc = np.where(res >= threshold)
-      for pt in zip(*loc[::-1]):
-        cv.rectangle(img, pt, (pt[0] + w, pt[1] + h), (0,0,255), 2)
-        arrowArray.append(pt)
-
-    # cv.imwrite(r'assets\res.png', img)
-    self.videoArray.append(img)
-    if not arrowArray:
-      arrowArray = [(999, 999)]
-
-  return arrowArray
