@@ -63,3 +63,35 @@ class RecognizePattern:
     if result == "":
       result = "0"
     return(int(result))
+
+# TODO: Rename this method to be more self-explanatory
+  def input_expected(self, img, action):
+    hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+    left_arrow = hsv[:,5:35,:]
+    down_arrow = hsv[:,40:70,:]
+    up_arrow = hsv[:,70:100,:]
+    right_arrow = hsv[:,105:135,:]
+
+    # Checks for left, down, up and right input
+    if (action == 1):
+      return self.check_for_color(left_arrow)
+    elif (action == 2):
+      return self.check_for_color(down_arrow)
+    elif (action == 3):
+      return self.check_for_color(up_arrow)
+    elif (action == 4):
+      return self.check_for_color(right_arrow)
+    # If no action took place, return True
+    else:
+      return True
+    
+  def check_for_color(self, img):
+
+    lower_val = np.array([0, 150, 150], dtype='uint8')
+    upper_val = np.array([255, 255, 255], dtype='uint8')
+    mask = cv.inRange(img, lower_val, upper_val)
+    hasColor = np.sum(mask)
+    if (hasColor > 0):
+      return True
+    else:
+      return False
