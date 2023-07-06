@@ -1,0 +1,5 @@
+DQN8 - New Reward, 500k Steps, Images are grayscaled
+DQN9 - 75k Steps, Images are binary
+DQN10 - 75k Steps, Images are grayscaled
+DQN11 - 500k Steps, Images are binary (Comparison with DQN8)
+DQN13 - 1m Steps, Reward now gives +5 -1 (Corrupted)
