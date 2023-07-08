@@ -71,20 +71,19 @@ class RecognizePattern:
     down_arrow = hsv[:,40:70,:]
     up_arrow = hsv[:,70:100,:]
     right_arrow = hsv[:,105:135,:]
+    arrows = [left_arrow, down_arrow, up_arrow, right_arrow]
 
-    # Checks for left, down, up and right input
-    if (action == 1):
-      return self.check_for_color(left_arrow)
-    elif (action == 2):
-      return self.check_for_color(down_arrow)
-    elif (action == 3):
-      return self.check_for_color(up_arrow)
-    elif (action == 4):
-      return self.check_for_color(right_arrow)
-    # If no action took place, return True
-    else:
-      return True
-    
+    # Iterate through array of actions
+    # If there is color, and the corresponding key hasn't been pressed, or vice versa, return false
+    # Otherwise, return true
+    for i in range(len(action)):
+      if (action[i] == 1 and self.check_for_color(arrows[i]) == True) or (action[i] == 0 and self.check_for_color(arrows[i]) == False):
+        continue
+      else: 
+        return False
+
+    return True
+
   def check_for_color(self, img):
 
     lower_val = np.array([0, 150, 150], dtype='uint8')
