@@ -1,142 +1,139 @@
 ## This .py file is used to register the custom environment to gymnasium
 
-
-from gym import Env
-from gym.spaces import Discrete, Box
-from matplotlib import pyplot as plt
-from mss import mss
-import numpy as np 
-import time
-import pydirectinput
-import pygetwindow
-import cv2
-import win32gui
-import pytesseract
-import gym as gym
-from image_analysis.take_screenshot import Screenshot
-from input_sending.input_sending import SendInput 
-from text_recognition.text_recog import RecognizeText 
-from pattern_recognition.pattern_recog import RecognizePattern 
-
 class StepManiaEnv(Env):
-    
+
     # Setup
     def __init__(self):
+        
         super().__init__()
+        # Define action space
         self.action_space = Discrete(5)
 
         # Observation Array
         self.observation_space = Box(
             low=0, 
             high=255, 
-            shape=(1, 135, 100), # does this work?
+            shape=(1, 135, 100),
             dtype=np.uint8
         )
         
         # Define extraction parameters for the game
         self.screenshot_helper = Screenshot()
-        self.text_recog_helper = RecognizeText()
         self.input_sending_helper = SendInput()
+        self.pattern_recog_helper = RecognizePattern()
         self.capture = mss()
         self.steps = 0
+        self.previous_reward = 0
         self.window_location = {'top': 35, 'left': 10, 'width': 410, 'height': 230}
         self.game_location = {'top': 15, 'left': 20, 'width': 100, 'height': 185}
         self.score_location = {'top': 215, 'left': 280, 'width': 100, 'height': 25}
-        self.done_location = {'top': 0, 'left': 0, 'width': 80, 'height':25}
-        self.cur_held_buttons = {'a': False, 'd': False, 'w': False, 's': False}
-        pytesseract.pytesseract.tesseract_cmd = r'G:\Programme\Tesseract\tesseract.exe'
+        self.done_location = {'top': 0, 'left': 0, 'width': 90, 'height':25}
+        self.past_arrows_location = {'top': 45, 'left': 50, 'width': 140, 'height': 2}
+        self.cur_held_buttons = {'a': False, 's': False, 'w': False, 'd': False}
+        self.action_map = {
+            0: "no_op",
+            1:'a',
+            2:'s',
+            3:'w',
+            4:'d',
+        }
         
-        win = pygetwindow.getWindowsWithTitle('StepMania')[0]
+        # Adjust window position and size
+        win = pygetwindow.getWindowsWithTitle('StepMania')[1]
         win.size = (450, 290)
         win.moveTo(0, 0)
 
-    # What is called to do something in the game
+    # One iteration of the environment
     def step(self, action):
-        
-        # Action dictionary
-        action_map = {
-            0:'no_op',
-            1:'a',
-            2:'d',
-            3:'w',
-            4:'s',
-        }
-        start = time.perf_counter()
 
-        # Manage and send input based on action parameter
+        # Manage input based on action parameter
         if action != 0:
             if (list(self.cur_held_buttons.values())[action - 1]):
                 self.cur_held_buttons[list(self.cur_held_buttons)[action - 1]] = False
-                self.input_sending_helper.releaseKey(action_map[action])
+                self.input_sending_helper.releaseKey(self.action_map[action])
             else:
                 self.cur_held_buttons[list(self.cur_held_buttons)[action - 1]] = True
-                self.input_sending_helper.holdKey(action_map[action])
-        
-
+                self.input_sending_helper.holdKey(self.action_map[action])
+     
         # Take screenshot for done, observation and reward functions
         screenshot = np.array(self.capture.grab(self.window_location))[:,:,:-1].astype(np.uint8)
-        gray_screenshot = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
-        downscaled_screenshot = self.screenshot_helper.downscaleImage(screenshot, (225, 150), (1, 150, 225))
+        downscaled_screenshot = self.screenshot_helper.downscaleImageBinary(screenshot, (225, 150), (1, 150, 225))
         self.steps += 1
-
+        
         # Checking if the game is over
-        done = self.get_over(gray_screenshot)
-
+        done = self.get_over(screenshot)
+        
         # Get the next observation
         new_observation = self.get_observation(downscaled_screenshot)
-        
+
         # Use score as reward
-        reward = self.get_reward(gray_screenshot)
+        reward = self.get_reward(screenshot, action)
         info = {}
-        stop = time.perf_counter()
 
         return new_observation, reward, done, info
 
-    # Restart the game
+    # Quits result screen and selects new song
     def reset(self):
-        
+
         # Exit to menu, select new song and start
         time.sleep(5)
         pydirectinput.press('enter')
-        time.sleep(5)
+        time.sleep(6)
         pydirectinput.press('d')
         time.sleep(2)
         pydirectinput.press('enter')
 
         # Edge Case - 'Roulette' is selected
-        time.sleep(1.2)
+        time.sleep(1.5)
         pydirectinput.press('enter')
         time.sleep(3)
         pydirectinput.press('enter')
 
+        # Reset variables
+        self.previous_reward = 0
+        self.steps = 0
+
         # Take screenshot to pass to observation
         screenshot = np.array(self.capture.grab(self.window_location))[:,:,:-1].astype(np.uint8)
-        downscaled_screenshot = self.screenshot_helper.downscaleImage(screenshot, (225, 150), (1, 150, 225))
-        
+        downscaled_screenshot = self.screenshot_helper.downscaleImageBinary(screenshot, (225, 150), (1, 150, 225))
+
         return self.get_observation(downscaled_screenshot)
 
-    # Get the part of observation of the game that we want
+    # Returns image of gameplay
     def get_observation(self, img):
 
         # Crop gameplay part of the window screenshot
         obs = img[:, self.game_location['top']:(self.game_location['top'] + self.game_location['height']), self.game_location['left']:(self.game_location['left'] + self.game_location['width'])]
 
         return obs
+            
 
-    # Get the current score as a reward
-    def get_reward(self, img):
+    # Returns the current score as a reward
+    def get_reward(self, img, action):
 
-        # Crop score part of the window screenshot
-        obs = img[self.score_location['top']:(self.score_location['top'] + self.score_location['height']), self.score_location['left']:(self.score_location['left'] + self.score_location['width'])]
+        # Crop score part of the window screenshot and top of the gameplay section
+        score_img = img[self.score_location['top']:(self.score_location['top'] + self.score_location['height']), self.score_location['left']:(self.score_location['left'] + self.score_location['width'])]
+        past_arrows_img = img[env.past_arrows_location['top']:(env.past_arrows_location['top'] + env.past_arrows_location['height']), env.past_arrows_location['left']:(env.past_arrows_location['left'] + env.past_arrows_location['width'])]
 
-        return env.text_recog_helper.get_number_from_image(obs)
+        # If no input should have occured, give negative reward
+        if (self.pattern_recog_helper.input_expected(past_arrows_img, action) == False):
+            return -1
 
-    # Get if the game is over
+        # If the score increased, give positive reward
+        new_reward = self.pattern_recog_helper.analyze_score(score_img)
+        if (new_reward > self.previous_reward):
+            # Set the current reward as the previous reward for the next iteration
+            self.previous_reward = new_reward
+            return 5
+            
+        # If the score didn't change, and no action has taken place, give a neutral reward
+        else:
+            return 0
+
+    # Checks if the game is over
     def get_over(self, img):
 
         # Crop done part of the window screenshot
         obs = img[self.done_location['top']:(self.done_location['top'] + self.done_location['height']), self.done_location['left']:(self.done_location['left'] + self.done_location['width'])]
-        # Valid done text
-        done_strings = ['‘our Results', 'Your Results']
-
-        return self.text_recog_helper.is_text_in_image(obs, done_strings, 12)
+        
+        return self.pattern_recog_helper.analyze_results(obs)

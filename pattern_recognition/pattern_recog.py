@@ -29,14 +29,6 @@ class RecognizePattern:
       self.template_9
     ]
 
-  def convert(self):
-    i = 0
-    for i in range(10):
-      cur_temp = self.template_numbers[i]
-      threshold = 128
-      im_bw = cv.threshold(cur_temp, threshold, 255, cv.THRESH_BINARY)[1]
-      cv.imwrite(r'assets\bw_' + str(i) + ".png", im_bw)
-
   def analyze_results(self, img):
     threshold = 0.9
     img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -64,7 +56,6 @@ class RecognizePattern:
       result = "0"
     return(int(result))
 
-# TODO: Rename this method to be more self-explanatory
   def input_expected(self, img, action):
     hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
     left_arrow = hsv[:,5:35,:]
@@ -85,7 +76,6 @@ class RecognizePattern:
     # If no action took place, return True
     else:
       return True
-        
 
   def check_for_color(self, img):
 
